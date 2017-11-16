@@ -260,7 +260,10 @@ class Address extends \Magento\Sales\Block\Adminhtml\Order\Create\Form\AbstractF
         }
 
         $this->_form->setValues($this->getFormValues());
-
+        
+        $params = $this->getRequest()->getParams();
+		$shipping_country_id = isset($params["order"]["billing_address"]["country_id"]) ? $params["order"]["billing_address"]["country_id"] : null;
+		
         if ($this->_form->getElement('country_id')->getValue()) {
             $countryId = $this->_form->getElement('country_id')->getValue();
             $this->_form->getElement('country_id')->setValue(null);
@@ -271,9 +274,17 @@ class Address extends \Magento\Sales\Block\Adminhtml\Order\Create\Form\AbstractF
             }
         }
         if ($this->_form->getElement('country_id')->getValue() === null) {
-            $this->_form->getElement('country_id')->setValue(
-                $this->directoryHelper->getDefaultCountry($this->getStore())
-            );
+			if (isset($countryId)){
+				$this->_form->getElement('country_id')->setValue($countryId);
+			} else {
+				if (isset($shipping_country_id)){
+					$this->_form->getElement('country_id')->setValue($shipping_country_id);
+				} else {
+					$this->_form->getElement('country_id')->setValue(
+						$this->directoryHelper->getDefaultCountry($this->getStore())
+					);
+				}
+			}
         }
         $this->processCountryOptions($this->_form->getElement('country_id'));
         // Set custom renderer for VAT field if needed
